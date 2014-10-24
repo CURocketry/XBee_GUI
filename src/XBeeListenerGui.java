@@ -44,7 +44,6 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 
 	private static final int baud = 9600; //serial comm rate
 
-
 	private static final String[] addresses = { "1: 0013A200 / 40BF5647", "2: 0013A200 / 40BF56A5",
 			"3: 0013A200 / 409179A7", "4: 0013A200 / 4091796F" };
 
@@ -54,8 +53,9 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 							 					  new XBeeAddress64(0, 0x13, 0xa2, 0, 0x40, 0x91, 0x79, 0x6f)
 												};
 
-	private XBeeAddress64 addr64;
+	private XBeeAddress64 addr64;				//selected address
 	private XBeeListenerThread xbeeListener;
+	
 	
 	private int nr = 0; //number received packets
 	private int ns = 0;	//number sent packets
@@ -267,23 +267,21 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 			xbeeListener.stopListening();
 		}
 		
-		//TODO: Explain?
+		//TODO: Not sure what this does, so I commented it out - @mahsu
+		/*
 		try {
 			Thread.sleep(1000);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		*/
 		
 		// xbee.open("/dev/cu.usbserial-A5025UEI", 9600);
 		System.out.println(selSerial);
 		xbee.open(selSerial, baud); //open port
 		xbeeListener = new XBeeListenerThread(this); //init a new listener thread
 		xbeeListener.start();
-
-		// update addresses of wireless xbees
-		// addr64 = addr[addressesList.getSelectedIndex()];//updateAddr(); //TODO: isn't address already updated in the dropdown's event handler?
-		//TODO: If I broke something, uncomment this first
 
 		resetPacketCounters();
 	}
@@ -292,6 +290,9 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 	 * Send a packet to remote XBee
 	 * @param r		text to send
 	 */
+	/**
+	 * @param r
+	 */
 	public void sendXBeePacket(String r) {
 		try {
 			// send a request and wait up to 10 seconds for the response
@@ -299,11 +300,15 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 			for (int i = 0; i < r.length(); i++) {
 				payload[i] = r.charAt(i);
 			}
+			addr64 = addr[addressesList.getSelectedIndex()];
 			final ZNetTxRequest request = new ZNetTxRequest(addr64, payload);
-			ZNetTxStatusResponse response = (ZNetTxStatusResponse) xbee.sendSynchronous(request, 10000);
+			
+			ZNetTxStatusResponse response = (ZNetTxStatusResponse) xbee.sendSynchronous(request,1000);
+			//System.out.println(response.isSuccess());
 			if (response.isSuccess()) {
 				// packet was delivered successfully
 				// System.out.println("Success!");
+				System.out.print("success");
 				ns++;
 				addToReceiveText("Sent (" + ns + "): " + r);
 			} else {
@@ -326,6 +331,7 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 		} catch (Exception e) {
 			ne++;
 			addToReceiveText("Error (" + ne + "): Java Error. Make sure GS XBee is initialized: " + e.getMessage());
+			e.printStackTrace();
 		}
 
 	}
