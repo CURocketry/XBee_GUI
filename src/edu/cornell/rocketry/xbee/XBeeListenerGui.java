@@ -1,3 +1,5 @@
+package edu.cornell.rocketry.xbee;
+
 import gnu.io.CommPortIdentifier;
 import gnu.io.PortInUseException;
 //import javax.comm.CommPortIdentifier;
@@ -37,10 +39,15 @@ import com.rapplogic.xbee.api.zigbee.ZNetTxRequest;
 import com.rapplogic.xbee.api.zigbee.ZNetTxStatusResponse;
 import com.rapplogic.xbee.util.ByteUtils;
 
+import org.apache.log4j.Logger;
+
+
 /**
  * An instance of XBeeListenerGui contains the GUI: initialization and display
  */
 public class XBeeListenerGui extends javax.swing.JFrame {
+
+	private static final long serialVersionUID = -4915109019152721192L;
 
 	private static final int baud = 9600; //serial comm rate
 
@@ -73,6 +80,8 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 	private JComboBox addressesList;
 
 	public XBee xbee = new XBee(); //keep as public reference @see XBeeListenerThread.java
+	
+	private static Logger log = Logger.getLogger(XBeeListenerGui.class.getName());
 	
 	
 	/* Getters and Setters for packet counters*/
@@ -149,6 +158,7 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 		addressPanel.add(new JLabel("Wireless XBee Address (1):"), BorderLayout.WEST);
 		addressesList = new JComboBox(addresses);
 		addressesList.setSelectedIndex(0);
+		addr64 = addr[addressesList.getSelectedIndex()]; //set default address
 		addressesList.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				addr64 = addr[addressesList.getSelectedIndex()]; //set active address
@@ -168,6 +178,7 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 					addToReceiveText("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
 							+ System.getProperty("line.separator"));
 				} catch (XBeeException e1) {
+				e1.printStackTrace();
 					ne++;
 					addToReceiveText("Error ("
 							+ ne
@@ -294,6 +305,7 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 	 * @param r
 	 */
 	public void sendXBeePacket(String r) {
+		
 		try {
 			// send a request and wait up to 10 seconds for the response
 			int[] payload = new int[r.length()];
@@ -305,10 +317,11 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 			
 			ZNetTxStatusResponse response = (ZNetTxStatusResponse) xbee.sendSynchronous(request,1000);
 			//System.out.println(response.isSuccess());
+			
 			if (response.isSuccess()) {
 				// packet was delivered successfully
 				// System.out.println("Success!");
-				System.out.print("success");
+				System.out.println("success");
 				ns++;
 				addToReceiveText("Sent (" + ns + "): " + r);
 			} else {
@@ -317,6 +330,7 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 				ne++;
 				addToReceiveText("Error (" + ne + "): Packet not delivered - '" + r + "'");
 			}
+			
 		} catch (XBeeTimeoutException e1) {
 			// System.out.println("THERE WAS AN ERROR");
 			ne++;
@@ -328,6 +342,7 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 			addToReceiveText("Error (" + ne + "): Packet not delivered b/c of XBee Exception: " + e1.getMessage());
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
+		
 		} catch (Exception e) {
 			ne++;
 			addToReceiveText("Error (" + ne + "): Java Error. Make sure GS XBee is initialized: " + e.getMessage());
@@ -367,6 +382,15 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 	public void addToReceiveText(String txt) {
 		receiveText.setText(receiveText.getText() + "- " + txt + System.getProperty("line.separator"));
 		receiveText.setCaretPosition(receiveText.getDocument().getLength()); // locks scroll at bottom
+		logMessage(txt);
+	}
+	
+	/**
+	 * Write a message to the log file
+	 * @param msg			msg to write
+	 */
+	public void logMessage(String msg) {
+		log.info(msg);
 	}
 
 	/**
