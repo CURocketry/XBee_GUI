@@ -36,12 +36,31 @@ public class XBeeListenerThread extends Thread {
 
 					ZNetRxResponse ioSample = (ZNetRxResponse) response;
 
-					
-					String packet = ByteUtils.toString(ioSample.getData());
+					int[] longdata = new int[4];
+					longdata = ioSample.getData();
+					System.out.println(longdata.length);
+					long result = 0;
+					try {
+						for (int i=3; i>=0; i--) {
+							System.out.println(longdata[i]);
+							if (i>0)
+								result = (result | longdata[i]) << 8;
+							else result = result | longdata[i];
+						}
+					}
+					catch(ArrayIndexOutOfBoundsException e) {
+						mainWindow.incNumError();
+						mainWindow.addToReceiveText("Error (" + mainWindow.getNumError() + "): Malformed Packet");
+					}
+					mainWindow.incNumRec();
+					mainWindow.addToReceiveText("Received (" + mainWindow.getNumRec() + "): "
+							+ result);
+					//String packet = ByteUtils.toString(ioSample.getData());
 					// System.out.println("Recieved Data: " + packet);
 					// nLabel.setText("" + nr);
 
 					//packet is not deformed
+					/*
 					if (packet.charAt(0) == '<') {
 						// long incoming packet, formated "<[packet]>"
 						//System.out.println("start!");
@@ -59,12 +78,13 @@ public class XBeeListenerThread extends Thread {
 					else if (!receiving) {
 						mainWindow.incNumRec();
 						mainWindow.addToReceiveText("Received (" + mainWindow.getNumRec() + "): "
-								+ packet);
+								+ result);
 					} 
+					else
 					{
 						// System.out.println("recieved...!");
 						// System.out.println(packet);
-						data += packet;
+						//data += packet;
 						if (packet.charAt(packet.length() - 1) == '>') {
 							// end of data stream reached--> return data and
 							// reset...
@@ -75,7 +95,7 @@ public class XBeeListenerThread extends Thread {
 							data = "";
 
 						}
-					}
+					}*/
 				}
 			} 
 			catch (XBeeTimeoutException e) {
