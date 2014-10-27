@@ -38,7 +38,7 @@ public class XBeeListenerThread extends Thread {
 
 					int[] longdata = new int[4];
 					longdata = ioSample.getData();
-					System.out.println(longdata.length);
+					//System.out.println(longdata.length);
 					long result = 0;
 					try {
 						for (int i=3; i>=0; i--) {
