@@ -72,6 +72,7 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 	private JLabel nLabel;
 
 	private JTextArea receiveText;
+	private JTextArea rocketText, payloadText;
 	private JTextField sendEdit;
 	private final static Font titleFont = new Font("Arial", Font.BOLD, 20);
 	private final static Font textAreaFont = new Font("Arial", Font.PLAIN, 10);
@@ -117,10 +118,6 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 		// JSONObject obj= new JSONObject("{\"name\": \"booster\"}");
 		// System.out.println("Before WHILE JSON: " + obj.getString("name"));
 
-		/*
-		 * int[] payload = new int[] {'P' }; final ZNetTxRequest request = new
-		 * ZNetTxRequest(addr64, payload);
-		 */
 
 		// Layout GUI
 		JPanel fullPanel = new JPanel(new BorderLayout());
@@ -233,7 +230,6 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 		 * p2.add(packetLabel); p2.add(new JLabel("Count: ")); nLabel= new
 		 * JLabel("" + n); p2.add(nLabel);
 		 */
-		sendPacketsPanel.add(p2, BorderLayout.SOUTH);
 		JPanel PContainer = new JPanel(new BorderLayout());
 		PContainer.add(xbeeInitPanel, BorderLayout.NORTH);
 		PContainer.add(sendPacketsPanel, BorderLayout.CENTER);
@@ -251,7 +247,49 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 		JLabel receiveTitle = new JLabel("Received Packets", JLabel.CENTER);
 		receiveTitle.setFont(titleFont);
 		receivePanel.add(receiveTitle, BorderLayout.NORTH);
-		receivePanel.add(receiveScrollPlane, BorderLayout.SOUTH);
+		receivePanel.add(receiveScrollPlane,BorderLayout.EAST);
+		
+		/*-----------------Status Panel------------------*/
+		JPanel statusPanel = new JPanel();
+		JLabel statusTitle = new JLabel ("STATUS",JLabel.LEFT);
+		statusTitle.setFont(titleFont);
+		statusPanel.add(statusTitle);
+		
+		JPanel dataPanel = new JPanel (new BorderLayout());
+		JPanel tablePanel = new JPanel (new GridLayout(3,5));
+		JLabel rocketTitle = new JLabel ("Rocket",JLabel.LEFT);
+		rocketTitle.setFont(titleFont);
+		JLabel payloadTitle = new JLabel ("Payload",JLabel.LEFT);
+		payloadTitle.setFont(titleFont);
+		JLabel latTitle = new JLabel ("Latitude",JLabel.LEFT);
+		latTitle.setFont(titleFont);
+		JLabel longTitle = new JLabel ("Longitude",JLabel.LEFT);
+		longTitle.setFont(titleFont);
+		JLabel altTitle = new JLabel ("Altitude",JLabel.LEFT);
+		altTitle.setFont(titleFont);
+		JLabel enableTitle = new JLabel ("Enabled (Yes/No)",JLabel.LEFT);
+		enableTitle.setFont(titleFont);
+
+		tablePanel.add(new JLabel("", JLabel.LEFT));
+		tablePanel.add(latTitle);
+		tablePanel.add(longTitle);
+		tablePanel.add(altTitle);
+		tablePanel.add(enableTitle);
+		tablePanel.add(rocketTitle);
+		tablePanel.add(new JLabel("0", JLabel.LEFT));
+		tablePanel.add(new JLabel("0", JLabel.LEFT));
+		tablePanel.add(new JLabel("0", JLabel.LEFT));
+		tablePanel.add(new JLabel("yes", JLabel.LEFT));
+		tablePanel.add(payloadTitle);
+		tablePanel.add(new JLabel("N/A", JLabel.LEFT));
+		tablePanel.add(new JLabel("N/A", JLabel.LEFT));
+		tablePanel.add(new JLabel("N/A", JLabel.LEFT));
+		tablePanel.add(new JLabel("N/A", JLabel.LEFT));	
+		
+		dataPanel.add(statusPanel, BorderLayout.NORTH);
+		dataPanel.add(tablePanel, BorderLayout.SOUTH);	
+		fullPanel.add(dataPanel, BorderLayout.SOUTH);
+
 
 		fullPanel.add(PContainer, BorderLayout.WEST);
 		fullPanel.add(receivePanel, BorderLayout.CENTER);
