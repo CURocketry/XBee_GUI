@@ -79,7 +79,10 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 
 	private JComboBox serialPortsList;
 	private JComboBox addressesList;
-
+	
+	private JPanel fullPanel, statusPanel, dataPanel, tablePanel;
+	private static JLabel lat,longi,alt,flag;
+	
 	public XBee xbee = new XBee(); //keep as public reference @see XBeeListenerThread.java
 	
 	private static Logger log = Logger.getLogger(XBeeListenerGui.class.getName());
@@ -250,13 +253,13 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 		receivePanel.add(receiveScrollPlane,BorderLayout.EAST);
 		
 		/*-----------------Status Panel------------------*/
-		JPanel statusPanel = new JPanel();
+		statusPanel = new JPanel();
 		JLabel statusTitle = new JLabel ("STATUS",JLabel.LEFT);
 		statusTitle.setFont(titleFont);
 		statusPanel.add(statusTitle);
 		
-		JPanel dataPanel = new JPanel (new BorderLayout());
-		JPanel tablePanel = new JPanel (new GridLayout(3,5));
+		dataPanel = new JPanel (new BorderLayout());
+		tablePanel = new JPanel (new GridLayout(3,5));
 		JLabel rocketTitle = new JLabel ("Rocket",JLabel.LEFT);
 		rocketTitle.setFont(titleFont);
 		JLabel payloadTitle = new JLabel ("Payload",JLabel.LEFT);
@@ -275,11 +278,15 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 		tablePanel.add(longTitle);
 		tablePanel.add(altTitle);
 		tablePanel.add(enableTitle);
-		tablePanel.add(rocketTitle);
-		tablePanel.add(new JLabel("0", JLabel.LEFT));
-		tablePanel.add(new JLabel("0", JLabel.LEFT));
-		tablePanel.add(new JLabel("0", JLabel.LEFT));
-		tablePanel.add(new JLabel("yes", JLabel.LEFT));
+		tablePanel.add(rocketTitle);	
+		lat = new JLabel("0", JLabel.LEFT);
+		tablePanel.add(lat);
+		longi = new JLabel("0",JLabel.LEFT);
+		tablePanel.add(longi); 
+		alt = new JLabel("0",JLabel.LEFT);
+		tablePanel.add(alt);
+		flag = new JLabel("-",JLabel.LEFT);
+		tablePanel.add(flag);
 		tablePanel.add(payloadTitle);
 		tablePanel.add(new JLabel("N/A", JLabel.LEFT));
 		tablePanel.add(new JLabel("N/A", JLabel.LEFT));
@@ -287,12 +294,41 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 		tablePanel.add(new JLabel("N/A", JLabel.LEFT));	
 		
 		dataPanel.add(statusPanel, BorderLayout.NORTH);
-		dataPanel.add(tablePanel, BorderLayout.SOUTH);	
+		dataPanel.add(tablePanel, BorderLayout.SOUTH);
+
 		fullPanel.add(dataPanel, BorderLayout.SOUTH);
+		
+		/* //for testing without XBee
+		JButton testBtn= new JButton("test");
+		testBtn.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e){
+				int[] longdata = {0xB,0xB9,0xA4,0x87,0x2,0xC,0x87,0xAC,0x70,0xFB,0xD,0xF,0x27,0xE,0xF};
+				String lat, longi, alt, flag;
+				lat = ""+(Integer.parseInt(String.valueOf(longdata[4]))*((int) Math.pow(16, 6))+
+						Integer.parseInt(String.valueOf(longdata[3]))*((int) Math.pow(16, 4))+
+						Integer.parseInt(String.valueOf(longdata[2]))*((int) Math.pow(16, 2))+
+						Integer.parseInt(String.valueOf(longdata[1]))); 
+				
+				longi = ""+(Integer.parseInt(String.valueOf(longdata[9]))*((int) Math.pow(16, 6))+
+						Integer.parseInt(String.valueOf(longdata[8]))*((int) Math.pow(16, 4))+
+						Integer.parseInt(String.valueOf(longdata[7]))*((int) Math.pow(16, 2))+
+						Integer.parseInt(String.valueOf(longdata[6])));
+				
+				alt = ""+(Integer.parseInt(String.valueOf(longdata[12]))*((int)Math.pow(16, 2))+
+						Integer.parseInt(String.valueOf(longdata[11])));
+				
+				flag = ""+String.valueOf(longdata[14]);
 
+				updateData(lat, longi, alt, flag);
+			}
+		}); 
+		dataPanel.add(testBtn,BorderLayout.EAST); 
+		*/
+		
+		
 
-		fullPanel.add(PContainer, BorderLayout.WEST);
-		fullPanel.add(receivePanel, BorderLayout.CENTER);
+		fullPanel.add(PContainer,BorderLayout.WEST);
+		fullPanel.add(receivePanel,BorderLayout.CENTER);
 
 		
 		//Main window props
@@ -346,10 +382,16 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 		
 		try {
 			// send a request and wait up to 10 seconds for the response
-			int[] payload = new int[r.length()];
-			for (int i = 0; i < r.length(); i++) {
-				payload[i] = r.charAt(i);
+			int[] payload = new int[1];
+			if(r.equals("(Test Packet)")){
+				payload[0] = 0xB;	//init
 			}
+			
+			//add condition for Send Data
+			
+			/*for (int i = 0; i < r.length(); i++) {
+				payload[i] = r.charAt(i);
+			}*/
 			addr64 = addr[addressesList.getSelectedIndex()];
 			final ZNetTxRequest request = new ZNetTxRequest(addr64, payload);
 			
@@ -388,7 +430,16 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 		}
 
 	}
+	
+	//get updated data from XBee and display it
+	public void updateData (String updateLat, String updateLongi, String updateAlt, String updateFlag) {
+		lat.setText(""+updateLat);
+		longi.setText(""+updateLongi);
+		alt.setText(""+updateAlt);
+		flag.setText(""+updateFlag);
+	}
 
+	
 	/**
 	 * updated the Serial Port List (i.e. after a refresh)
 	 * @void
@@ -430,6 +481,17 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 	public void logMessage(String msg) {
 		log.info(msg);
 	}
-
+	
+	private int bintodec(int bin,int start){
+		//for 8-bit binary
+		int dec=0;
+		for(int i = start;i<start+8;i++){
+			if(bin != 0){
+				dec = dec+((int) Math.pow(2, (double)i))*(bin%10);
+				bin = bin/10;
+			}
+		}
+		return dec;
+	}
 
 }
