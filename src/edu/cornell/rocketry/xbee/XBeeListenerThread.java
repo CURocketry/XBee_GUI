@@ -24,16 +24,6 @@ public class XBeeListenerThread extends Thread {
 	}
 	
 	public void stopListening() { keepListening = false; }
-
-	private int bintodec(int bin){
-		//for 8-bit binary
-		int dec=0;
-		for(int i=0;i<8;i++){
-			dec = ((int) Math.pow(2, (double)i))*(bin%10);
-			bin = bin/10;
-		}
-		return dec;
-	}
 	
 	private int convertToDecimal(int[] array){
 		int result = 0;
@@ -61,30 +51,51 @@ public class XBeeListenerThread extends Thread {
 					longdata = ioSample.getData();
 					
 					String lat = "", longi = "", alt = "", flag = "";
-					final int latMarker = 0xA;
-					final int longMarker = 0xB;
-					final int altMarker = 0xC;
-					final int flagMarker = 0xD;
+					final int MARKER_LAT = 0xB;
+					final int LEN_LAT = 4;
+					final int MARKER_LON = 0xC;
+					final int LEN_LON =4;
+					final int MARKER_ALT = 0xD;
+					final int LEN_ALT = 2;
+					final int MARKER_FLAG = 0xE;
+					final int LEN_FLAG = 1;
 					//System.out.println(longdata.length);
+					int readerIndex = 0;
 					long result = 0;
+					System.out.println(longdata);
+					System.out.println(longdata[0]);
 					try {
-						if(longdata[0] == latMarker){
-							int[] newLat = new int[4];
-							System.arraycopy(longdata,1,newLat,0,4);
+						if(longdata[readerIndex] == MARKER_LAT){
+							readerIndex++;
+							int[] newLat = new int[LEN_LAT];
+							System.arraycopy(longdata,readerIndex,newLat,0,LEN_LAT);
 							lat = String.valueOf(convertToDecimal(newLat));
+							readerIndex = readerIndex + LEN_LAT;
 						}
-						if(longdata[5] == longMarker){
-							int[] newLong = new int[4];
-							System.arraycopy(longdata,6,newLong,0,4);
-							longi = String.valueOf(convertToDecimal(newLong));
+						if(longdata[readerIndex] == MARKER_LON){
+							readerIndex++;
+							int[] newLon = new int[LEN_LON];
+							System.arraycopy(longdata,readerIndex,newLon,0,LEN_LON);
+							longi = String.valueOf(convertToDecimal(newLon));
+							readerIndex = readerIndex + LEN_LON;
 						}
-						if(longdata[10] == altMarker){
-							int[] newAlt = new int[2];
-							System.arraycopy(longdata,11,newAlt,0,2);
+						if(longdata[readerIndex] == MARKER_ALT){
+							readerIndex++;
+							int[] newAlt = new int[LEN_ALT];
+							System.arraycopy(longdata,readerIndex,newAlt,0,LEN_ALT);
 							alt = String.valueOf(convertToDecimal(newAlt));
+							readerIndex = readerIndex + LEN_ALT;
 						}
-						if(longdata[14] == flagMarker){
-							flag = String.valueOf(longdata[15]);
+						if(longdata[readerIndex] == MARKER_FLAG){
+							readerIndex++;
+							//flag = String.valueOf([15]);
+							readerIndex = readerIndex + LEN_FLAG;
+						}
+						//else throw new ArrayIndexOutOfBoundsException();
+						if (readerIndex != longdata.length) {
+							System.out.println(readerIndex);
+							System.out.println("Packet reader error.");
+							//TODO throw error
 						}
 						mainWindow.updateData(lat, longi, alt, flag);
 					}
@@ -95,47 +106,7 @@ public class XBeeListenerThread extends Thread {
 					mainWindow.incNumRec();
 					mainWindow.addToReceiveText("Received (" + mainWindow.getNumRec() + "): "
 							+ result);
-					//String packet = ByteUtils.toString(ioSample.getData());
-					// System.out.println("Recieved Data: " + packet);
-					// nLabel.setText("" + nr);
 
-					//packet is not deformed
-					/*
-					if (packet.charAt(0) == '<') {
-						// long incoming packet, formated "<[packet]>"
-						//System.out.println("start!");
-						if (receiving) {
-							// System.out.println("ERROR: new packet before last data stream ended");
-							mainWindow.incNumError();
-							mainWindow.addToReceiveText("Error (" + mainWindow.getNumError() + "): New packet before last data stream ended...");
-							mainWindow.incNumRec();
-							mainWindow.addToReceiveText("Incomplete Received (" + mainWindow.getNumRec() + "): " + data);
-							mainWindow.incNumRec();
-							mainWindow.addToReceiveText("New Received (" + mainWindow.getNumRec() + "): " + packet);
-						}
-						receiving = true;
-					} 
-					else if (!receiving) {
-						mainWindow.incNumRec();
-						mainWindow.addToReceiveText("Received (" + mainWindow.getNumRec() + "): "
-								+ result);
-					} 
-					else
-					{
-						// System.out.println("recieved...!");
-						// System.out.println(packet);
-						//data += packet;
-						if (packet.charAt(packet.length() - 1) == '>') {
-							// end of data stream reached--> return data and
-							// reset...
-							// System.out.println(data);
-							mainWindow.incNumRec();
-							mainWindow.addToReceiveText("Received (" + mainWindow.getNumRec() + "): " + data);
-							receiving = false;
-							data = "";
-
-						}
-					}*/
 				}
 			} 
 			catch (XBeeTimeoutException e) {
