@@ -39,7 +39,7 @@ public class XBeeListenerThread extends Thread {
 
 					int[] longdata = new int[15];
 					IncomingPacket packet = new IncomingPacket(ioSample.getData());
-					mainWindow.updateData(packet.getLatitude(), packet.getLongitude(), packet.getAltitude(), flag);
+					mainWindow.updateData(packet.getLatitude(), packet.getLongitude(), packet.getAltitude(), packet.getFlag());
 
 					//System.out.println(longdata.length);
 					
