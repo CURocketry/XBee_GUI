@@ -38,14 +38,18 @@ public class XBeeListenerThread extends Thread {
 					ZNetRxResponse ioSample = (ZNetRxResponse) response;
 
 					int[] longdata = new int[15];
-					IncomingPacket packet = new IncomingPacket(ioSample.getData());
+					longdata = ioSample.getData();
+					IncomingPacket packet = new IncomingPacket(longdata);
 					mainWindow.updateData(packet.getLatitude(), packet.getLongitude(), packet.getAltitude(), packet.getFlag());
 
 					//System.out.println(longdata.length);
-					
+					String data="";
+					for (int i=0;i<longdata.length;i++){
+						data+=longdata[i];
+					}
 					mainWindow.incNumRec();
 					mainWindow.addToReceiveText("Received (" + mainWindow.getNumRec() + "): "
-							+ "result");
+							+ data);
 
 				}
 			} 
