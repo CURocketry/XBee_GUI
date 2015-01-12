@@ -64,9 +64,9 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 	private XBeeListenerThread xbeeListener;
 	
 	
-	private int nr = 0; //number received packets
-	private int ns = 0;	//number sent packets
-	private int ne = 0; //number error packets
+	private int numRec = 0; 	//number received packets
+	private int numSent = 0;	//number sent packets
+	private int numErr = 0; 	//number error packets
 
 	private JLabel packetLabel;
 	private JLabel nLabel;
@@ -89,38 +89,20 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 	
 	
 	/* Getters and Setters for packet counters*/
-	public int getNumSent() { return ns;}
-	public void incNumSent() { ns++; }
-	public int getNumRec() {return nr;}
-	public void incNumRec() { nr++; }
-	public int getNumError() {return ne;}
-	public void incNumError() { ne++; }
-	public void resetPacketCounters() { ns=0; nr=0; ne=0; }
+	public int getNumSent() { return numSent;}
+	public void incNumSent() { numSent++; }
+	public int getNumRec() {return numRec;}
+	public void incNumRec() { numRec++; }
+	public int getNumError() {return numErr;}
+	public void incNumError() { numErr++; }
+	public void resetPacketCounters() { numSent=0; numRec=0; numErr=0; }
 
 	/**
 	 * Constructor 
 	 */
 	public XBeeListenerGui() {
 
-		// String path= System.getProperty("user.dir");
-
-		// System.setProperty( "java.library.path", path + "/lib/");
-		// System.setProperty("java.library.path", "/Users/sjd227/Desktop/lib");
-		// System.out.println(System.getProperty("java.library.path"));
-
 		PropertyConfigurator.configure("./lib/log4j.properties");
-		// final XBee xbee = new XBee();
-
-		// short cable:
-		// UNCOMMENTED OUT FOR GUI LAYOUT DEV:
-		// xbee.open("/dev/cu.usbserial-A5025UEI", 9600);
-
-		// long cable:
-		// xbee.open("/dev/cu.usbserial-A603H5XW", 9600);
-		// xbee.open("/dev/cu.usbserial-A702LFEL", 9600);
-		// JSONObject obj= new JSONObject("{\"name\": \"booster\"}");
-		// System.out.println("Before WHILE JSON: " + obj.getString("name"));
-
 
 		// Layout GUI
 		JPanel fullPanel = new JPanel(new BorderLayout());
@@ -179,9 +161,9 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 							+ System.getProperty("line.separator"));
 				} catch (XBeeException e1) {
 				e1.printStackTrace();
-					ne++;
+					numErr++;
 					addToReceiveText("Error ("
-							+ ne
+							+ numErr
 							+ "): Could not connect to XBee :( make sure port isn't being used by another program (including this one)!");
 				}
 			}
@@ -211,11 +193,6 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 		btn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				sendXBeePacket(sendEdit.getText());
-				// For debugging:
-				/*
-				 * nr= nr+1; addToReceiveText("Received (" + nr + "): " +
-				 * sendEdit.getText(),receiveText);
-				 */
 			}
 
 		});
@@ -227,12 +204,7 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 		p2.add(new JLabel("Send Packet: "), BorderLayout.WEST);
 		sendEdit = new JTextField("", 20);
 		p2.add(sendEdit, BorderLayout.CENTER);
-		// p2.add(new JLabel(""));
-		/*
-		 * p2.add(new JLabel("Recieved Packet: ")); packetLabel= new JLabel("");
-		 * p2.add(packetLabel); p2.add(new JLabel("Count: ")); nLabel= new
-		 * JLabel("" + n); p2.add(nLabel);
-		 */
+
 		JPanel PContainer = new JPanel(new BorderLayout());
 		PContainer.add(xbeeInitPanel, BorderLayout.NORTH);
 		PContainer.add(sendPacketsPanel, BorderLayout.CENTER);
@@ -298,35 +270,6 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 
 		fullPanel.add(dataPanel, BorderLayout.SOUTH);
 		
-		/* //for testing without XBee
-		JButton testBtn= new JButton("test");
-		testBtn.addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent e){
-				int[] longdata = {0xB,0xB9,0xA4,0x87,0x2,0xC,0x87,0xAC,0x70,0xFB,0xD,0xF,0x27,0xE,0xF};
-				String lat, longi, alt, flag;
-				lat = ""+(Integer.parseInt(String.valueOf(longdata[4]))*((int) Math.pow(16, 6))+
-						Integer.parseInt(String.valueOf(longdata[3]))*((int) Math.pow(16, 4))+
-						Integer.parseInt(String.valueOf(longdata[2]))*((int) Math.pow(16, 2))+
-						Integer.parseInt(String.valueOf(longdata[1]))); 
-				
-				longi = ""+(Integer.parseInt(String.valueOf(longdata[9]))*((int) Math.pow(16, 6))+
-						Integer.parseInt(String.valueOf(longdata[8]))*((int) Math.pow(16, 4))+
-						Integer.parseInt(String.valueOf(longdata[7]))*((int) Math.pow(16, 2))+
-						Integer.parseInt(String.valueOf(longdata[6])));
-				
-				alt = ""+(Integer.parseInt(String.valueOf(longdata[12]))*((int)Math.pow(16, 2))+
-						Integer.parseInt(String.valueOf(longdata[11])));
-				
-				flag = ""+String.valueOf(longdata[14]);
-
-				updateData(lat, longi, alt, flag);
-			}
-		}); 
-		dataPanel.add(testBtn,BorderLayout.EAST); 
-		*/
-		
-		
-
 		fullPanel.add(PContainer,BorderLayout.WEST);
 		fullPanel.add(receivePanel,BorderLayout.CENTER);
 
@@ -352,17 +295,7 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 			xbeeListener.stopListening();
 		}
 		
-		//TODO: Not sure what this does, so I commented it out - @mahsu
-		/*
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		*/
-		
-		// xbee.open("/dev/cu.usbserial-A5025UEI", 9600);
+
 		System.out.println(selSerial);
 		xbee.open(selSerial, baud); //open port
 		xbeeListener = new XBeeListenerThread(this); //init a new listener thread
@@ -389,9 +322,6 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 			
 			//add condition for Send Data
 			
-			/*for (int i = 0; i < r.length(); i++) {
-				payload[i] = r.charAt(i);
-			}*/
 			addr64 = addr[addressesList.getSelectedIndex()];
 			final ZNetTxRequest request = new ZNetTxRequest(addr64, payload);
 			
@@ -400,32 +330,31 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 			
 			if (response.isSuccess()) {
 				// packet was delivered successfully
-				// System.out.println("Success!");
 				System.out.println("success");
-				ns++;
-				addToReceiveText("Sent (" + ns + "): " + r);
+				numSent++;
+				addToReceiveText("Sent (" + numSent + "): " + r);
 			} else {
 				// packet was not delivered
-				// System.out.println("Packet was not delivered");
-				ne++;
-				addToReceiveText("Error (" + ne + "): Packet not delivered - '" + r + "'");
+
+				numErr++;
+				addToReceiveText("Error (" + numErr + "): Packet not delivered - '" + r + "'");
 			}
 			
 		} catch (XBeeTimeoutException e1) {
 			// System.out.println("THERE WAS AN ERROR");
-			ne++;
-			addToReceiveText("Error (" + ne + "): Packet delivery timed out - '" + r + "'");
+			numErr++;
+			addToReceiveText("Error (" + numErr + "): Packet delivery timed out - '" + r + "'");
 			// no response was received in the allotted time
 
 		} catch (XBeeException e1) {
-			ne++;
-			addToReceiveText("Error (" + ne + "): Packet not delivered b/c of XBee Exception: " + e1.getMessage());
+			numErr++;
+			addToReceiveText("Error (" + numErr + "): Packet not delivered b/c of XBee Exception: " + e1.getMessage());
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		
 		} catch (Exception e) {
-			ne++;
-			addToReceiveText("Error (" + ne + "): Java Error. Make sure GS XBee is initialized: " + e.getMessage());
+			numErr++;
+			addToReceiveText("Error (" + numErr + "): Java Error. Make sure GS XBee is initialized: " + e.getMessage());
 			e.printStackTrace();
 		}
 
