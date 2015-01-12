@@ -51,18 +51,23 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 
 	private static final int baud = 115200; //serial comm rate
 
-	private static final String[] addresses = { "1: 0013A200 / 40BF5647", "2: 0013A200 / 40BF56A5",
-			"3: 0013A200 / 409179A7", "4: 0013A200 / 4091796F" };
+	private static final String[] addresses = { 
+		"1: 0013A200 / 40BF5647", 
+		"2: 0013A200 / 40BF56A5",
+		"3: 0013A200 / 409179A7",
+		"4: 0013A200 / 4091796F"
+	};
 
-	private static final XBeeAddress64 addr[] = { new XBeeAddress64(0, 0x13, 0xa2, 0, 0x40, 0xbf, 0x56, 0x47),	//long cable
-							 					  new XBeeAddress64(0, 0x13, 0xa2, 0, 0x40, 0xbf, 0x56, 0xa5),	//new xbees, small cable
-							 					  new XBeeAddress64(0, 0x13, 0xa2, 0, 0x40, 0x91, 0x79, 0xa7),
-							 					  new XBeeAddress64(0, 0x13, 0xa2, 0, 0x40, 0x91, 0x79, 0x6f)
-												};
+	private static final XBeeAddress64 addr[] = {
+		  new XBeeAddress64(0, 0x13, 0xa2, 0, 0x40, 0xbf, 0x56, 0x47),	//long cable
+		  new XBeeAddress64(0, 0x13, 0xa2, 0, 0x40, 0xbf, 0x56, 0xa5),	//new xbees, small cable
+		  new XBeeAddress64(0, 0x13, 0xa2, 0, 0x40, 0x91, 0x79, 0xa7),
+		  new XBeeAddress64(0, 0x13, 0xa2, 0, 0x40, 0x91, 0x79, 0x6f)
+	};
 
-	private XBeeAddress64 addr64;				//selected address
+	private XBeeAddress64 selectedAddress;				//selected address
 	private XBeeListenerThread xbeeListener;
-	
+	public XBee xbee = new XBee(); //keep as public reference @see XBeeListenerThread.java
 	
 	private int numRec = 0; 	//number received packets
 	private int numSent = 0;	//number sent packets
@@ -83,7 +88,6 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 	private JPanel fullPanel, statusPanel, dataPanel, tablePanel;
 	private static JLabel lat,longi,alt,flag;
 	
-	public XBee xbee = new XBee(); //keep as public reference @see XBeeListenerThread.java
 	
 	private static Logger log = Logger.getLogger(XBeeListenerGui.class.getName());
 	
@@ -140,10 +144,10 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 		addressPanel.add(new JLabel("Wireless XBee Address (1):"), BorderLayout.WEST);
 		addressesList = new JComboBox(addresses);
 		addressesList.setSelectedIndex(0);
-		addr64 = addr[addressesList.getSelectedIndex()]; //set default address
+		selectedAddress = addr[addressesList.getSelectedIndex()]; //set default address
 		addressesList.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				addr64 = addr[addressesList.getSelectedIndex()]; //set active address
+				selectedAddress = addr[addressesList.getSelectedIndex()]; //set active address
 			}
 		});
 		addressPanel.add(addressesList, BorderLayout.CENTER);
@@ -303,62 +307,24 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 
 		resetPacketCounters();
 	}
-
-	/**
-	 * Send a packet to remote XBee
-	 * @param r		text to send
-	 */
-	/**
-	 * @param r
-	 */
-	public void sendXBeePacket(String r) {
-		
+	
+	public boolean sendXBeePacket(String msg) {
+		OutgoingPacket payload = new OutgoingPacket();
 		try {
-			// send a request and wait up to 10 seconds for the response
-			int[] payload = new int[1];
-			if(r.equals("(Test Packet)")){
-				payload[0] = 0xB;	//init
-			}
-			
-			//add condition for Send Data
-			
-			addr64 = addr[addressesList.getSelectedIndex()];
-			final ZNetTxRequest request = new ZNetTxRequest(addr64, payload);
-			
-			ZNetTxStatusResponse response = (ZNetTxStatusResponse) xbee.sendSynchronous(request,1000);
-			//System.out.println(response.isSuccess());
-			
-			if (response.isSuccess()) {
-				// packet was delivered successfully
-				System.out.println("success");
-				numSent++;
-				addToReceiveText("Sent (" + numSent + "): " + r);
-			} else {
-				// packet was not delivered
-
-				numErr++;
-				addToReceiveText("Error (" + numErr + "): Packet not delivered - '" + r + "'");
-			}
-			
-		} catch (XBeeTimeoutException e1) {
-			// System.out.println("THERE WAS AN ERROR");
-			numErr++;
-			addToReceiveText("Error (" + numErr + "): Packet delivery timed out - '" + r + "'");
-			// no response was received in the allotted time
-
-		} catch (XBeeException e1) {
-			numErr++;
-			addToReceiveText("Error (" + numErr + "): Packet not delivered b/c of XBee Exception: " + e1.getMessage());
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		
-		} catch (Exception e) {
-			numErr++;
-			addToReceiveText("Error (" + numErr + "): Java Error. Make sure GS XBee is initialized: " + e.getMessage());
-			e.printStackTrace();
+			XBeeSender mailman = new XBeeSender(xbee, selectedAddress, payload);
+			mailman.send();
+			addToReceiveText("Sent (" + numSent + "): " + msg);
+			return true;
 		}
-
+		catch (XBeeSenderException e) {
+			addToReceiveText("Error (" + numErr + "): " + e.getMessage());
+			incNumError();
+			return false;
+		}
+		
+			
 	}
+	
 	
 	//get updated data from XBee and display it
 	public void updateData (String updateLat, String updateLongi, String updateAlt, String updateFlag) {
@@ -409,18 +375,6 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 	 */
 	public void logMessage(String msg) {
 		log.info(msg);
-	}
-	
-	private int bintodec(int bin,int start){
-		//for 8-bit binary
-		int dec=0;
-		for(int i = start;i<start+8;i++){
-			if(bin != 0){
-				dec = dec+((int) Math.pow(2, (double)i))*(bin%10);
-				bin = bin/10;
-			}
-		}
-		return dec;
 	}
 
 }

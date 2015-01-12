@@ -24,7 +24,7 @@ public class XBeeListenerThread extends Thread {
 	}
 	
 	public void stopListening() { keepListening = false; }
-
+	public void startListening() {keepListening = true; }
 	
 	@Override
 	public void run() {
