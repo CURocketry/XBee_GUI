@@ -1,14 +1,19 @@
 package edu.cornell.rocketry.xbee;
 
 public class IncomingPacket {
-	final static public int MARKER_LAT = 0xB;
+	//lengths in terms of bytes
+	final static public int MARKER_LAT = 0xFB;
 	final static public int LEN_LAT = 4;
-	final static public int MARKER_LON = 0xC;
+	final static public int MARKER_LON = 0xFC;
 	final static public int LEN_LON =4;
-	final static public int MARKER_ALT = 0xD;
+	final static public int MARKER_ALT = 0xFD;
 	final static public int LEN_ALT = 2;
-	final static public int MARKER_FLAG = 0xE;
+	final static public int MARKER_FLAG = 0xFE;
 	final static public int LEN_FLAG = 1;
+	final static public int MAX_SIZE = 15;
+	
+	final static public int FLAG_GPS_FIX = 0b00000001;
+	final static public int FLAG_PAYLOAD = 0b00000010;
 	
 	private int[] packetData;
 	private long latitude;
@@ -25,7 +30,6 @@ public class IncomingPacket {
 	private int convertToDecimalInt(int[] array){
 		int result = 0;
 		for (int i=array.length-1; i>=0; i--) {
-			//System.out.println(longdata[i]);
 			if (i>0)
 				result = (result | array[i]) << 8;
 			else result = result | array[i];
@@ -73,8 +77,8 @@ public class IncomingPacket {
 			}
 			//else throw new ArrayIndexOutOfBoundsException();
 			if (readerIndex != data.length) {
-				System.out.println(readerIndex);
-				System.out.println("Packet reader error. Check markers and order");
+				//System.out.println(readerIndex);
+				//System.out.println("Packet reader error. Check markers and order");
 				//TODO throw error
 			}
 		}

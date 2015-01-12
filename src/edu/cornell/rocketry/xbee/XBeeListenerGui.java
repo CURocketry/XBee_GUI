@@ -49,7 +49,7 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 
 	private static final long serialVersionUID = -4915109019152721192L;
 
-	private static final int baud = 9600; //serial comm rate
+	private static final int baud = 115200; //serial comm rate
 
 	private static final String[] addresses = { "1: 0013A200 / 40BF5647", "2: 0013A200 / 40BF56A5",
 			"3: 0013A200 / 409179A7", "4: 0013A200 / 4091796F" };
