@@ -1,18 +1,14 @@
 package edu.cornell.rocketry.xbee;
 
 import gnu.io.CommPortIdentifier;
-import gnu.io.PortInUseException;
-//import javax.comm.CommPortIdentifier;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Enumeration;
 
 import javax.swing.JButton;
@@ -26,18 +22,9 @@ import javax.swing.JTextField;
 
 import org.apache.log4j.PropertyConfigurator;
 
-import com.rapplogic.xbee.api.ApiId;
-import com.rapplogic.xbee.api.AtCommand;
 import com.rapplogic.xbee.api.XBee;
 import com.rapplogic.xbee.api.XBeeAddress64;
 import com.rapplogic.xbee.api.XBeeException;
-import com.rapplogic.xbee.api.XBeeResponse;
-import com.rapplogic.xbee.api.XBeeTimeoutException;
-import com.rapplogic.xbee.api.wpan.TxRequest64;
-import com.rapplogic.xbee.api.zigbee.ZNetRxResponse;
-import com.rapplogic.xbee.api.zigbee.ZNetTxRequest;
-import com.rapplogic.xbee.api.zigbee.ZNetTxStatusResponse;
-import com.rapplogic.xbee.util.ByteUtils;
 
 import org.apache.log4j.Logger;
 
@@ -48,7 +35,7 @@ import org.apache.log4j.Logger;
 public class XBeeListenerGui extends javax.swing.JFrame {
 	private static final long serialVersionUID = -4915109019152721192L;
 
-	public static final int baud = 115200; //serial comm rate
+	public static final int baud = 57600; //serial comm rate
 
 	public static final String[] addresses = { 
 		"1: 0013A200 / 40BF5647", 
