@@ -34,7 +34,7 @@ import org.apache.log4j.Logger;
  */
 public class XBeeListenerGui extends javax.swing.JFrame {
 	private static final long serialVersionUID = -4915109019152721192L;
-	public static final int[] baudRates = {4800, 9600, 19200, 38400, 57600, 115200};
+	public static final Integer[] baudRates = {4800, 9600, 19200, 38400, 57600, 115200};
 	public static final String[] addresses = { 
 		"1: 0013A200 / 40BF5647", 
 		"2: 0013A200 / 40BF56A5",
@@ -65,8 +65,8 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 	private final static Font titleFont = new Font("Arial", Font.BOLD, 20);
 	private final static Font textAreaFont = new Font("Arial", Font.PLAIN, 10);
 
-	private JComboBox<String> serialPortsList;
-	private JComboBox<String> addressesList;
+	private JComboBox<String> serialPortsList, addressesList;
+	private JComboBox<Integer> baudList;
 	
 	private JPanel fullPanel, statusPanel, dataPanel, tablePanel;
 	private static JLabel lat,longi,alt,flag;
@@ -100,9 +100,9 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 		JLabel xbeeInitLabel = new JLabel("Setup XBees", JLabel.CENTER);
 		xbeeInitLabel.setFont(titleFont);
 		xbeeInitPanel.add(xbeeInitLabel, BorderLayout.NORTH);
+		JPanel xbeeInitGrid = new JPanel(new GridLayout(5, 2));
 		
 		//XBee Serial Port Label
-		JPanel xbeeInitGrid = new JPanel(new GridLayout(2, 2));
 		JPanel serialPortPanel = new JPanel(new BorderLayout());
 		serialPortPanel.add(new JLabel("GS XBee Serial Port: "), BorderLayout.WEST);
 
@@ -135,7 +135,21 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 		});
 		addressPanel.add(addressesList, BorderLayout.CENTER);
 		xbeeInitGrid.add(addressPanel);
-		xbeeInitPanel.add(xbeeInitGrid, BorderLayout.CENTER);
+		
+		//Baud rate dropdown
+		JPanel baudPanel = new JPanel(new BorderLayout());
+		baudPanel.add(new JLabel("XBee Baud Rate: "), BorderLayout.WEST);
+		baudList = new JComboBox<Integer>(baudRates);
+		baudList.setSelectedIndex(4);
+		selectedBaud = (int) baudList.getSelectedItem(); //set default address
+		addressesList.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				selectedBaud = (int) baudList.getSelectedItem(); //set active address
+			}
+		});
+		baudPanel.add(baudList, BorderLayout.CENTER);
+		xbeeInitGrid.add(baudPanel);
+		
 
 		//Initialize GS XBee Button
 		JButton initXBeeButton = new JButton("Initialize GS XBee");
@@ -155,43 +169,45 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 				}
 			}
 		});
-		JPanel xbeeInitButtons = new JPanel(new BorderLayout());
-		xbeeInitButtons.add(initXBeeButton, BorderLayout.NORTH);
+		xbeeInitGrid.add(initXBeeButton);
+		xbeeInitPanel.add(xbeeInitGrid, BorderLayout.CENTER);
+
+		
+		//Send Packet Title and Button
+		JPanel sendPacketsPanel = new JPanel(new BorderLayout());
+		JPanel sendPacketsGrid = new JPanel(new GridLayout(5, 2));
+		JLabel sendTitle = new JLabel("Send Packets", JLabel.CENTER);
+		sendTitle.setFont(titleFont);
+		sendPacketsPanel.add(sendTitle, BorderLayout.NORTH);
 
 		//Test Send Button
-		JButton testSendBtn = new JButton("Test Send");
+		JButton testSendBtn = new JButton("Send Test");
 		testSendBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				sendXBeePacket("(Test Packet)");
 			}
 		});
-		xbeeInitButtons.add(testSendBtn, BorderLayout.SOUTH);
-
-		//Add initialize XBee and Test buttons
-		xbeeInitPanel.add(xbeeInitButtons, BorderLayout.SOUTH);
-
-		//Send Packet Title and Button
-		JPanel sendPacketsPanel = new JPanel(new BorderLayout());
-		JLabel sendTitle = new JLabel("Send Packets", JLabel.CENTER);
-		sendTitle.setFont(titleFont);
-		sendPacketsPanel.add(sendTitle, BorderLayout.NORTH);
-
-		JButton btn = new JButton("Send Data");
-		btn.addActionListener(new ActionListener() {
+		sendPacketsGrid.add(testSendBtn);
+		
+		//Send custom data box
+		JButton customDataBtn = new JButton("Send Data");
+		customDataBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				sendXBeePacket(sendEdit.getText());
 			}
 
 		});
 
-		sendPacketsPanel.add(btn, BorderLayout.CENTER);
+		sendPacketsGrid.add(customDataBtn, BorderLayout.CENTER);
 		
 		//Send Custom Packet Textbox
-		JPanel p2 = new JPanel(new BorderLayout());
-		p2.add(new JLabel("Send Packet: "), BorderLayout.WEST);
+		JPanel customPacketEntry = new JPanel(new BorderLayout());
+		customPacketEntry.add(new JLabel("Send Packet: "), BorderLayout.WEST);
 		sendEdit = new JTextField("", 20);
-		p2.add(sendEdit, BorderLayout.CENTER);
-		sendPacketsPanel.add(p2,BorderLayout.SOUTH);
+		customPacketEntry.add(sendEdit, BorderLayout.CENTER);
+		sendPacketsGrid.add(customPacketEntry,BorderLayout.SOUTH);
+		
+		sendPacketsPanel.add(sendPacketsGrid, BorderLayout.CENTER);
 		
 		JPanel PContainer = new JPanel(new BorderLayout());
 		PContainer.add(xbeeInitPanel, BorderLayout.NORTH);
