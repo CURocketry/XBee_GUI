@@ -1,5 +1,5 @@
 package edu.cornell.rocketry.xbee;
 
 public enum OutgoingPacketType {
-	PAYLOAD_LAUNCH
+	TEST, PAYLOAD_LAUNCH
 }

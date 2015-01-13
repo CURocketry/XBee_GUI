@@ -34,23 +34,20 @@ import org.apache.log4j.Logger;
  */
 public class XBeeListenerGui extends javax.swing.JFrame {
 	private static final long serialVersionUID = -4915109019152721192L;
-
-	public static final int baud = 57600; //serial comm rate
-
+	public static final int[] baudRates = {4800, 9600, 19200, 38400, 57600, 115200};
 	public static final String[] addresses = { 
 		"1: 0013A200 / 40BF5647", 
 		"2: 0013A200 / 40BF56A5",
 		"3: 0013A200 / 409179A7",
 		"4: 0013A200 / 4091796F"
 	};
-
 	public static final XBeeAddress64 addr[] = {
 		  new XBeeAddress64(0, 0x13, 0xa2, 0, 0x40, 0xbf, 0x56, 0x47),	//long cable
 		  new XBeeAddress64(0, 0x13, 0xa2, 0, 0x40, 0xbf, 0x56, 0xa5),	//new xbees, small cable
 		  new XBeeAddress64(0, 0x13, 0xa2, 0, 0x40, 0x91, 0x79, 0xa7),
 		  new XBeeAddress64(0, 0x13, 0xa2, 0, 0x40, 0x91, 0x79, 0x6f)
 	};
-
+	private int selectedBaud = 57600; //serial comm rate
 	private XBeeAddress64 selectedAddress;				//selected address
 	private XBeeListenerThread xbeeListener;
 	public XBee xbee = new XBee(); //keep as public reference @see XBeeListenerThread.java
@@ -68,8 +65,8 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 	private final static Font titleFont = new Font("Arial", Font.BOLD, 20);
 	private final static Font textAreaFont = new Font("Arial", Font.PLAIN, 10);
 
-	private JComboBox serialPortsList;
-	private JComboBox addressesList;
+	private JComboBox<String> serialPortsList;
+	private JComboBox<String> addressesList;
 	
 	private JPanel fullPanel, statusPanel, dataPanel, tablePanel;
 	private static JLabel lat,longi,alt,flag;
@@ -110,7 +107,7 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 		serialPortPanel.add(new JLabel("GS XBee Serial Port: "), BorderLayout.WEST);
 
 		//Serial port dropdown
-		serialPortsList = new JComboBox<String[]>(); //initialize empty dropdown
+		serialPortsList = new JComboBox<String>(); //initialize empty dropdown
 		updateSerialPortsList();
 		serialPortsList.setSelectedIndex(serialPortsList.getItemCount() - 1);
 
@@ -128,7 +125,7 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 		//Wireless Address Dropdown
 		JPanel addressPanel = new JPanel(new BorderLayout());
 		addressPanel.add(new JLabel("Remote XBee Address: "), BorderLayout.WEST);
-		addressesList = new JComboBox(addresses);
+		addressesList = new JComboBox<String>(addresses);
 		addressesList.setSelectedIndex(0);
 		selectedAddress = addr[addressesList.getSelectedIndex()]; //set default address
 		addressesList.addActionListener(new ActionListener() {
@@ -194,7 +191,8 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 		p2.add(new JLabel("Send Packet: "), BorderLayout.WEST);
 		sendEdit = new JTextField("", 20);
 		p2.add(sendEdit, BorderLayout.CENTER);
-
+		sendPacketsPanel.add(p2,BorderLayout.SOUTH);
+		
 		JPanel PContainer = new JPanel(new BorderLayout());
 		PContainer.add(xbeeInitPanel, BorderLayout.NORTH);
 		PContainer.add(sendPacketsPanel, BorderLayout.CENTER);
@@ -262,6 +260,7 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 		
 		fullPanel.add(PContainer,BorderLayout.WEST);
 		fullPanel.add(receivePanel,BorderLayout.CENTER);
+		
 
 		
 		//Main window props
@@ -287,7 +286,7 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 		
 
 		System.out.println(selSerial);
-		xbee.open(selSerial, baud); //open port
+		xbee.open(selSerial, selectedBaud); //open port
 		xbeeListener = new XBeeListenerThread(this); //init a new listener thread
 		xbeeListener.start();
 
@@ -295,7 +294,7 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 	}
 	
 	public boolean sendXBeePacket(String msg) {
-		OutgoingPacket payload = new OutgoingPacket(OutgoingPacketType.PAYLOAD_LAUNCH);
+		OutgoingPacket payload = new OutgoingPacket(OutgoingPacketType.TEST);
 		try {
 			XBeeSender mailman = new XBeeSender(xbee, selectedAddress, payload);
 			mailman.send();
@@ -307,8 +306,6 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 			incNumError();
 			return false;
 		}
-		
-			
 	}
 	
 	
