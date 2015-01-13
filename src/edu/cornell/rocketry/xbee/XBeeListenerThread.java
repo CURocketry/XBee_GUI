@@ -31,8 +31,7 @@ public class XBeeListenerThread extends Thread {
 		while (keepListening) {
 			try {
 				XBeeResponse response = mainWindow.xbee.getResponse();
-				// System.out.println(response.getApiId().toString());
-				// System.out.println(response.getClass().toString());
+				
 				if (response.getApiId() == ApiId.ZNET_RX_RESPONSE) {
 
 					ZNetRxResponse ioSample = (ZNetRxResponse) response;
@@ -42,7 +41,6 @@ public class XBeeListenerThread extends Thread {
 					IncomingPacket packet = new IncomingPacket(longdata);
 					mainWindow.updateData(packet.getLatitude(), packet.getLongitude(), packet.getAltitude(), packet.getFlag());
 
-					//System.out.println(longdata.length);
 					String data="";
 					for (int i=0;i<longdata.length;i++){
 						data+=longdata[i];

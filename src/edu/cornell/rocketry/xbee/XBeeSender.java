@@ -28,12 +28,12 @@ public class XBeeSender {
 		
 		try {
 			// send a request and wait up to 10 seconds for the response
-			int[] payload = new int[1];
-				payload[0] = 0xB;
+			//int[] payload = new int[1];
+			//	payload[0] = 0xB;
 			
 			//add condition for Send Data
 			
-			final ZNetTxRequest request = new ZNetTxRequest(destination, payload);
+			final ZNetTxRequest request = new ZNetTxRequest(destination, payload.getPayload());
 			
 			ZNetTxStatusResponse response = (ZNetTxStatusResponse) xbee.sendSynchronous(request,1000);
 			//System.out.println(response.isSuccess());
@@ -47,7 +47,7 @@ public class XBeeSender {
 			}
 			
 		} catch (XBeeTimeoutException e) {
-			// System.out.println("THERE WAS AN ERROR");
+			// timeout after 10 seconds
 			throw new XBeeSenderException("Packet delivery timed out");
 			
 			// no response was received in the allotted time

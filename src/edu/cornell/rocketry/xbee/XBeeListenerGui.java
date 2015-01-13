@@ -46,19 +46,18 @@ import org.apache.log4j.Logger;
  * An instance of XBeeListenerGui contains the GUI
  */
 public class XBeeListenerGui extends javax.swing.JFrame {
-
 	private static final long serialVersionUID = -4915109019152721192L;
 
-	private static final int baud = 115200; //serial comm rate
+	public static final int baud = 115200; //serial comm rate
 
-	private static final String[] addresses = { 
+	public static final String[] addresses = { 
 		"1: 0013A200 / 40BF5647", 
 		"2: 0013A200 / 40BF56A5",
 		"3: 0013A200 / 409179A7",
 		"4: 0013A200 / 4091796F"
 	};
 
-	private static final XBeeAddress64 addr[] = {
+	public static final XBeeAddress64 addr[] = {
 		  new XBeeAddress64(0, 0x13, 0xa2, 0, 0x40, 0xbf, 0x56, 0x47),	//long cable
 		  new XBeeAddress64(0, 0x13, 0xa2, 0, 0x40, 0xbf, 0x56, 0xa5),	//new xbees, small cable
 		  new XBeeAddress64(0, 0x13, 0xa2, 0, 0x40, 0x91, 0x79, 0xa7),
@@ -141,7 +140,7 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 
 		//Wireless Address Dropdown
 		JPanel addressPanel = new JPanel(new BorderLayout());
-		addressPanel.add(new JLabel("Wireless XBee Address (1):"), BorderLayout.WEST);
+		addressPanel.add(new JLabel("Remote XBee Address: "), BorderLayout.WEST);
 		addressesList = new JComboBox(addresses);
 		addressesList.setSelectedIndex(0);
 		selectedAddress = addr[addressesList.getSelectedIndex()]; //set default address
@@ -279,7 +278,7 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 
 		
 		//Main window props
-		setTitle("XBee Tester");
+		setTitle("XBee Coordinator");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setResizable(false);
 		pack();
@@ -309,7 +308,7 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 	}
 	
 	public boolean sendXBeePacket(String msg) {
-		OutgoingPacket payload = new OutgoingPacket();
+		OutgoingPacket payload = new OutgoingPacket(OutgoingPacketType.PAYLOAD_LAUNCH);
 		try {
 			XBeeSender mailman = new XBeeSender(xbee, selectedAddress, payload);
 			mailman.send();
