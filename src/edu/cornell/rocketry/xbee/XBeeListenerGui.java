@@ -1,18 +1,14 @@
 package edu.cornell.rocketry.xbee;
 
 import gnu.io.CommPortIdentifier;
-import gnu.io.PortInUseException;
-//import javax.comm.CommPortIdentifier;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Enumeration;
 
 import javax.swing.JButton;
@@ -26,18 +22,9 @@ import javax.swing.JTextField;
 
 import org.apache.log4j.PropertyConfigurator;
 
-import com.rapplogic.xbee.api.ApiId;
-import com.rapplogic.xbee.api.AtCommand;
 import com.rapplogic.xbee.api.XBee;
 import com.rapplogic.xbee.api.XBeeAddress64;
 import com.rapplogic.xbee.api.XBeeException;
-import com.rapplogic.xbee.api.XBeeResponse;
-import com.rapplogic.xbee.api.XBeeTimeoutException;
-import com.rapplogic.xbee.api.wpan.TxRequest64;
-import com.rapplogic.xbee.api.zigbee.ZNetRxResponse;
-import com.rapplogic.xbee.api.zigbee.ZNetTxRequest;
-import com.rapplogic.xbee.api.zigbee.ZNetTxStatusResponse;
-import com.rapplogic.xbee.util.ByteUtils;
 
 import org.apache.log4j.Logger;
 
@@ -46,23 +33,24 @@ import org.apache.log4j.Logger;
  * An instance of XBeeListenerGui contains the GUI
  */
 public class XBeeListenerGui extends javax.swing.JFrame {
-
 	private static final long serialVersionUID = -4915109019152721192L;
-
-	private static final int baud = 115200; //serial comm rate
-
-	private static final String[] addresses = { "1: 0013A200 / 40BF5647", "2: 0013A200 / 40BF56A5",
-			"3: 0013A200 / 409179A7", "4: 0013A200 / 4091796F" };
-
-	private static final XBeeAddress64 addr[] = { new XBeeAddress64(0, 0x13, 0xa2, 0, 0x40, 0xbf, 0x56, 0x47),	//long cable
-							 					  new XBeeAddress64(0, 0x13, 0xa2, 0, 0x40, 0xbf, 0x56, 0xa5),	//new xbees, small cable
-							 					  new XBeeAddress64(0, 0x13, 0xa2, 0, 0x40, 0x91, 0x79, 0xa7),
-							 					  new XBeeAddress64(0, 0x13, 0xa2, 0, 0x40, 0x91, 0x79, 0x6f)
-												};
-
-	private XBeeAddress64 addr64;				//selected address
+	public static final Integer[] baudRates = {4800, 9600, 19200, 38400, 57600, 115200};
+	public static final String[] addresses = { 
+		"1: 0013A200 / 40BF5647", 
+		"2: 0013A200 / 40BF56A5",
+		"3: 0013A200 / 409179A7",
+		"4: 0013A200 / 4091796F"
+	};
+	public static final XBeeAddress64 addr[] = {
+		  new XBeeAddress64(0, 0x13, 0xa2, 0, 0x40, 0xbf, 0x56, 0x47),	//long cable
+		  new XBeeAddress64(0, 0x13, 0xa2, 0, 0x40, 0xbf, 0x56, 0xa5),	//new xbees, small cable
+		  new XBeeAddress64(0, 0x13, 0xa2, 0, 0x40, 0x91, 0x79, 0xa7),
+		  new XBeeAddress64(0, 0x13, 0xa2, 0, 0x40, 0x91, 0x79, 0x6f)
+	};
+	private int selectedBaud = 57600; //serial comm rate
+	private XBeeAddress64 selectedAddress;				//selected address
 	private XBeeListenerThread xbeeListener;
-	
+	public XBee xbee = new XBee(); //keep as public reference @see XBeeListenerThread.java
 	
 	private int numRec = 0; 	//number received packets
 	private int numSent = 0;	//number sent packets
@@ -77,13 +65,12 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 	private final static Font titleFont = new Font("Arial", Font.BOLD, 20);
 	private final static Font textAreaFont = new Font("Arial", Font.PLAIN, 10);
 
-	private JComboBox serialPortsList;
-	private JComboBox addressesList;
+	private JComboBox<String> serialPortsList, addressesList;
+	private JComboBox<Integer> baudList;
 	
 	private JPanel fullPanel, statusPanel, dataPanel, tablePanel;
 	private static JLabel lat,longi,alt,flag;
 	
-	public XBee xbee = new XBee(); //keep as public reference @see XBeeListenerThread.java
 	
 	private static Logger log = Logger.getLogger(XBeeListenerGui.class.getName());
 	
@@ -113,14 +100,14 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 		JLabel xbeeInitLabel = new JLabel("Setup XBees", JLabel.CENTER);
 		xbeeInitLabel.setFont(titleFont);
 		xbeeInitPanel.add(xbeeInitLabel, BorderLayout.NORTH);
+		JPanel xbeeInitGrid = new JPanel(new GridLayout(5, 2));
 		
 		//XBee Serial Port Label
-		JPanel xbeeInitGrid = new JPanel(new GridLayout(2, 2));
 		JPanel serialPortPanel = new JPanel(new BorderLayout());
 		serialPortPanel.add(new JLabel("GS XBee Serial Port: "), BorderLayout.WEST);
 
 		//Serial port dropdown
-		serialPortsList = new JComboBox<String[]>(); //initialize empty dropdown
+		serialPortsList = new JComboBox<String>(); //initialize empty dropdown
 		updateSerialPortsList();
 		serialPortsList.setSelectedIndex(serialPortsList.getItemCount() - 1);
 
@@ -137,18 +124,32 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 
 		//Wireless Address Dropdown
 		JPanel addressPanel = new JPanel(new BorderLayout());
-		addressPanel.add(new JLabel("Wireless XBee Address (1):"), BorderLayout.WEST);
-		addressesList = new JComboBox(addresses);
+		addressPanel.add(new JLabel("Remote XBee Address: "), BorderLayout.WEST);
+		addressesList = new JComboBox<String>(addresses);
 		addressesList.setSelectedIndex(0);
-		addr64 = addr[addressesList.getSelectedIndex()]; //set default address
+		selectedAddress = addr[addressesList.getSelectedIndex()]; //set default address
 		addressesList.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				addr64 = addr[addressesList.getSelectedIndex()]; //set active address
+				selectedAddress = addr[addressesList.getSelectedIndex()]; //set active address
 			}
 		});
 		addressPanel.add(addressesList, BorderLayout.CENTER);
 		xbeeInitGrid.add(addressPanel);
-		xbeeInitPanel.add(xbeeInitGrid, BorderLayout.CENTER);
+		
+		//Baud rate dropdown
+		JPanel baudPanel = new JPanel(new BorderLayout());
+		baudPanel.add(new JLabel("XBee Baud Rate: "), BorderLayout.WEST);
+		baudList = new JComboBox<Integer>(baudRates);
+		baudList.setSelectedIndex(4);
+		selectedBaud = (int) baudList.getSelectedItem(); //set default address
+		addressesList.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				selectedBaud = (int) baudList.getSelectedItem(); //set active address
+			}
+		});
+		baudPanel.add(baudList, BorderLayout.CENTER);
+		xbeeInitGrid.add(baudPanel);
+		
 
 		//Initialize GS XBee Button
 		JButton initXBeeButton = new JButton("Initialize GS XBee");
@@ -168,43 +169,46 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 				}
 			}
 		});
-		JPanel xbeeInitButtons = new JPanel(new BorderLayout());
-		xbeeInitButtons.add(initXBeeButton, BorderLayout.NORTH);
+		xbeeInitGrid.add(initXBeeButton);
+		xbeeInitPanel.add(xbeeInitGrid, BorderLayout.CENTER);
+
+		
+		//Send Packet Title and Button
+		JPanel sendPacketsPanel = new JPanel(new BorderLayout());
+		JPanel sendPacketsGrid = new JPanel(new GridLayout(5, 2));
+		JLabel sendTitle = new JLabel("Send Packets", JLabel.CENTER);
+		sendTitle.setFont(titleFont);
+		sendPacketsPanel.add(sendTitle, BorderLayout.NORTH);
 
 		//Test Send Button
-		JButton testSendBtn = new JButton("Test Send");
+		JButton testSendBtn = new JButton("Send Test");
 		testSendBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				sendXBeePacket("(Test Packet)");
 			}
 		});
-		xbeeInitButtons.add(testSendBtn, BorderLayout.SOUTH);
-
-		//Add initialize XBee and Test buttons
-		xbeeInitPanel.add(xbeeInitButtons, BorderLayout.SOUTH);
-
-		//Send Packet Title and Button
-		JPanel sendPacketsPanel = new JPanel(new BorderLayout());
-		JLabel sendTitle = new JLabel("Send Packets", JLabel.CENTER);
-		sendTitle.setFont(titleFont);
-		sendPacketsPanel.add(sendTitle, BorderLayout.NORTH);
-
-		JButton btn = new JButton("Send Data");
-		btn.addActionListener(new ActionListener() {
+		sendPacketsGrid.add(testSendBtn);
+		
+		//Send custom data box
+		JButton customDataBtn = new JButton("Send Data");
+		customDataBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				sendXBeePacket(sendEdit.getText());
 			}
 
 		});
 
-		sendPacketsPanel.add(btn, BorderLayout.CENTER);
+		sendPacketsGrid.add(customDataBtn, BorderLayout.CENTER);
 		
 		//Send Custom Packet Textbox
-		JPanel p2 = new JPanel(new BorderLayout());
-		p2.add(new JLabel("Send Packet: "), BorderLayout.WEST);
+		JPanel customPacketEntry = new JPanel(new BorderLayout());
+		customPacketEntry.add(new JLabel("Send Packet: "), BorderLayout.WEST);
 		sendEdit = new JTextField("", 20);
-		p2.add(sendEdit, BorderLayout.CENTER);
-
+		customPacketEntry.add(sendEdit, BorderLayout.CENTER);
+		sendPacketsGrid.add(customPacketEntry,BorderLayout.SOUTH);
+		
+		sendPacketsPanel.add(sendPacketsGrid, BorderLayout.CENTER);
+		
 		JPanel PContainer = new JPanel(new BorderLayout());
 		PContainer.add(xbeeInitPanel, BorderLayout.NORTH);
 		PContainer.add(sendPacketsPanel, BorderLayout.CENTER);
@@ -272,10 +276,11 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 		
 		fullPanel.add(PContainer,BorderLayout.WEST);
 		fullPanel.add(receivePanel,BorderLayout.CENTER);
+		
 
 		
 		//Main window props
-		setTitle("XBee Tester");
+		setTitle("XBee Coordinator");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setResizable(false);
 		pack();
@@ -297,68 +302,28 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 		
 
 		System.out.println(selSerial);
-		xbee.open(selSerial, baud); //open port
+		xbee.open(selSerial, selectedBaud); //open port
 		xbeeListener = new XBeeListenerThread(this); //init a new listener thread
 		xbeeListener.start();
 
 		resetPacketCounters();
 	}
-
-	/**
-	 * Send a packet to remote XBee
-	 * @param r		text to send
-	 */
-	/**
-	 * @param r
-	 */
-	public void sendXBeePacket(String r) {
-		
+	
+	public boolean sendXBeePacket(String msg) {
+		OutgoingPacket payload = new OutgoingPacket(OutgoingPacketType.TEST);
 		try {
-			// send a request and wait up to 10 seconds for the response
-			int[] payload = new int[1];
-			if(r.equals("(Test Packet)")){
-				payload[0] = 0xB;	//init
-			}
-			
-			//add condition for Send Data
-			
-			addr64 = addr[addressesList.getSelectedIndex()];
-			final ZNetTxRequest request = new ZNetTxRequest(addr64, payload);
-			
-			ZNetTxStatusResponse response = (ZNetTxStatusResponse) xbee.sendSynchronous(request,1000);
-			//System.out.println(response.isSuccess());
-			
-			if (response.isSuccess()) {
-				// packet was delivered successfully
-				System.out.println("success");
-				numSent++;
-				addToReceiveText("Sent (" + numSent + "): " + r);
-			} else {
-				// packet was not delivered
-
-				numErr++;
-				addToReceiveText("Error (" + numErr + "): Packet not delivered - '" + r + "'");
-			}
-			
-		} catch (XBeeTimeoutException e1) {
-			// System.out.println("THERE WAS AN ERROR");
-			numErr++;
-			addToReceiveText("Error (" + numErr + "): Packet delivery timed out - '" + r + "'");
-			// no response was received in the allotted time
-
-		} catch (XBeeException e1) {
-			numErr++;
-			addToReceiveText("Error (" + numErr + "): Packet not delivered b/c of XBee Exception: " + e1.getMessage());
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		
-		} catch (Exception e) {
-			numErr++;
-			addToReceiveText("Error (" + numErr + "): Java Error. Make sure GS XBee is initialized: " + e.getMessage());
-			e.printStackTrace();
+			XBeeSender mailman = new XBeeSender(xbee, selectedAddress, payload);
+			mailman.send();
+			addToReceiveText("Sent (" + numSent + "): " + msg);
+			return true;
 		}
-
+		catch (XBeeSenderException e) {
+			addToReceiveText("Error (" + numErr + "): " + e.getMessage());
+			incNumError();
+			return false;
+		}
 	}
+	
 	
 	//get updated data from XBee and display it
 	public void updateData (String updateLat, String updateLongi, String updateAlt, String updateFlag) {
@@ -409,18 +374,6 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 	 */
 	public void logMessage(String msg) {
 		log.info(msg);
-	}
-	
-	private int bintodec(int bin,int start){
-		//for 8-bit binary
-		int dec=0;
-		for(int i = start;i<start+8;i++){
-			if(bin != 0){
-				dec = dec+((int) Math.pow(2, (double)i))*(bin%10);
-				bin = bin/10;
-			}
-		}
-		return dec;
 	}
 
 }

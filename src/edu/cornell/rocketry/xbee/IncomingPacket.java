@@ -1,5 +1,7 @@
 package edu.cornell.rocketry.xbee;
 
+import com.rapplogic.xbee.api.zigbee.ZNetRxResponse;
+
 public class IncomingPacket {
 	//lengths in terms of bytes
 	final static public int MARKER_LAT = 0xFB;
@@ -38,45 +40,40 @@ public class IncomingPacket {
 	}
 
 	
-	public IncomingPacket(int[] data) {
-		packetData = data;
-		System.out.println(data.length);
-		/*for (int i=0; i<data.length; i++) {
-			System.out.print(String.format("0x%8s", Integer.toHexString(data[i])).replace(' ', '0') + " ");
-		}*/
-		//System.out.print("\n");
-			int readerIndex = 0;
-		//long result = 0;
+	public IncomingPacket(ZNetRxResponse ioSample) {
+		packetData = ioSample.getData();
+		System.out.println(packetData.length);
+		int readerIndex = 0;
 		try {
-			if(data[readerIndex] == MARKER_LAT){
+			if(packetData[readerIndex] == MARKER_LAT){
 				readerIndex++;
 				int[] newLat = new int[LEN_LAT];
-				System.arraycopy(data,readerIndex,newLat,0,LEN_LAT);
+				System.arraycopy(packetData,readerIndex,newLat,0,LEN_LAT);
 				latitude = convertToDecimalInt(newLat);
 				readerIndex = readerIndex + LEN_LAT;
 			}
-			if(data[readerIndex] == MARKER_LON){
+			if(packetData[readerIndex] == MARKER_LON){
 				readerIndex++;
 				int[] newLon = new int[LEN_LON];
-				System.arraycopy(data,readerIndex,newLon,0,LEN_LON);
+				System.arraycopy(packetData,readerIndex,newLon,0,LEN_LON);
 				longitude = convertToDecimalInt(newLon);
 				readerIndex = readerIndex + LEN_LON;
 			}
-			if(data[readerIndex] == MARKER_ALT){
+			if(packetData[readerIndex] == MARKER_ALT){
 				readerIndex++;
 				int[] newAlt = new int[LEN_ALT];
-				System.arraycopy(data,readerIndex,newAlt,0,LEN_ALT);
+				System.arraycopy(packetData,readerIndex,newAlt,0,LEN_ALT);
 				altitude = convertToDecimalInt(newAlt);
 				readerIndex = readerIndex + LEN_ALT;
 			}
-			if(data[readerIndex] == MARKER_FLAG){
+			if(packetData[readerIndex] == MARKER_FLAG){
 				readerIndex++;
 				//flag = String.valueOf([15]);
-				flag = (byte)data[readerIndex];
+				flag = (byte)packetData[readerIndex];
 				readerIndex = readerIndex + LEN_FLAG;
 			}
 			//else throw new ArrayIndexOutOfBoundsException();
-			if (readerIndex != data.length) {
+			if (readerIndex != packetData.length) {
 				//System.out.println(readerIndex);
 				//System.out.println("Packet reader error. Check markers and order");
 				//TODO throw error
@@ -88,6 +85,15 @@ public class IncomingPacket {
 			//mainWindow.incNumError();
 			//mainWindow.addToReceiveText("Error (" + mainWindow.getNumError() + "): Malformed Packet");
 		}
+	}
+	
+	@Override public String toString() {
+		String data = "";
+		for (int i=0;i < packetData.length;i++){
+			//data+=packetData[i];
+			data += String.format("%8s", Integer.toHexString(packetData[i])).replaceAll(" ", "").toUpperCase() + " ";
+		}
+		return data;
 	}
 	
 	
