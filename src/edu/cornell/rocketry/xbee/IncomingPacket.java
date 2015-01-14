@@ -2,7 +2,7 @@ package edu.cornell.rocketry.xbee;
 
 import com.rapplogic.xbee.api.zigbee.ZNetRxResponse;
 
-public class IncomingPacket {
+public class IncomingPacket implements Packet{
 	//lengths in terms of bytes
 	final static public int MARKER_LAT = 0xFB;
 	final static public int LEN_LAT = 4;
@@ -17,7 +17,8 @@ public class IncomingPacket {
 	final static public int FLAG_GPS_FIX = 0b00000001;
 	final static public int FLAG_PAYLOAD = 0b00000010;
 	
-	private int[] packetData;
+	private final int size;
+	private final int[] payload;
 	private long latitude;
 	private long longitude;
 	private int altitude;
@@ -41,39 +42,39 @@ public class IncomingPacket {
 
 	
 	public IncomingPacket(ZNetRxResponse ioSample) {
-		packetData = ioSample.getData();
-		System.out.println(packetData.length);
+		payload = ioSample.getData();
+		size = payload.length;
 		int readerIndex = 0;
 		try {
-			if(packetData[readerIndex] == MARKER_LAT){
+			if(payload[readerIndex] == MARKER_LAT){
 				readerIndex++;
 				int[] newLat = new int[LEN_LAT];
-				System.arraycopy(packetData,readerIndex,newLat,0,LEN_LAT);
+				System.arraycopy(payload,readerIndex,newLat,0,LEN_LAT);
 				latitude = convertToDecimalInt(newLat);
 				readerIndex = readerIndex + LEN_LAT;
 			}
-			if(packetData[readerIndex] == MARKER_LON){
+			if(payload[readerIndex] == MARKER_LON){
 				readerIndex++;
 				int[] newLon = new int[LEN_LON];
-				System.arraycopy(packetData,readerIndex,newLon,0,LEN_LON);
+				System.arraycopy(payload,readerIndex,newLon,0,LEN_LON);
 				longitude = convertToDecimalInt(newLon);
 				readerIndex = readerIndex + LEN_LON;
 			}
-			if(packetData[readerIndex] == MARKER_ALT){
+			if(payload[readerIndex] == MARKER_ALT){
 				readerIndex++;
 				int[] newAlt = new int[LEN_ALT];
-				System.arraycopy(packetData,readerIndex,newAlt,0,LEN_ALT);
+				System.arraycopy(payload,readerIndex,newAlt,0,LEN_ALT);
 				altitude = convertToDecimalInt(newAlt);
 				readerIndex = readerIndex + LEN_ALT;
 			}
-			if(packetData[readerIndex] == MARKER_FLAG){
+			if(payload[readerIndex] == MARKER_FLAG){
 				readerIndex++;
 				//flag = String.valueOf([15]);
-				flag = (byte)packetData[readerIndex];
+				flag = (byte)payload[readerIndex];
 				readerIndex = readerIndex + LEN_FLAG;
 			}
 			//else throw new ArrayIndexOutOfBoundsException();
-			if (readerIndex != packetData.length) {
+			if (readerIndex != payload.length) {
 				//System.out.println(readerIndex);
 				//System.out.println("Packet reader error. Check markers and order");
 				//TODO throw error
@@ -87,11 +88,18 @@ public class IncomingPacket {
 		}
 	}
 	
+	public int[] getPayload() {
+		return payload;
+	}
+	
+	public int getSize() {
+		return size;
+	}
+	
 	@Override public String toString() {
 		String data = "";
-		for (int i=0;i < packetData.length;i++){
-			//data+=packetData[i];
-			data += String.format("%8s", Integer.toHexString(packetData[i])).replaceAll(" ", "").toUpperCase() + " ";
+		for (int i=0;i < payload.length;i++){
+			data += String.format("%8s", Integer.toHexString(payload[i])).replaceAll(" ", "").toUpperCase() + " ";
 		}
 		return data;
 	}

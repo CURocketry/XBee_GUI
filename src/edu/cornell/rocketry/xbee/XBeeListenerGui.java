@@ -56,11 +56,7 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 	private int numSent = 0;	//number sent packets
 	private int numErr = 0; 	//number error packets
 
-	private JLabel packetLabel;
-	private JLabel nLabel;
-
 	private JTextArea receiveText;
-	private JTextArea rocketText, payloadText;
 	private JTextField sendEdit;
 	private final static Font titleFont = new Font("Arial", Font.BOLD, 20);
 	private final static Font textAreaFont = new Font("Arial", Font.PLAIN, 10);
@@ -92,7 +88,7 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 		PropertyConfigurator.configure("./lib/log4j.properties");
 
 		// Layout GUI
-		JPanel fullPanel = new JPanel(new BorderLayout());
+		fullPanel = new JPanel(new BorderLayout());
 		setContentPane(fullPanel);
 
 		/*-----------------------------Setup XBees Panel----------------------------*/

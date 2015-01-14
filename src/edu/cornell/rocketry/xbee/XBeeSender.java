@@ -28,11 +28,6 @@ public class XBeeSender {
 		
 		try {
 			// send a request and wait up to 10 seconds for the response
-			//int[] payload = new int[1];
-			//	payload[0] = 0xB;
-			
-			//add condition for Send Data
-			
 			final ZNetTxRequest request = new ZNetTxRequest(destination, payload.getPayload());
 			
 			ZNetTxStatusResponse response = (ZNetTxStatusResponse) xbee.sendSynchronous(request,1000);

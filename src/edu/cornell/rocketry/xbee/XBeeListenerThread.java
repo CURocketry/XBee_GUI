@@ -9,7 +9,6 @@ import com.rapplogic.xbee.api.zigbee.ZNetRxResponse;
 public class XBeeListenerThread extends Thread {
 
 	private boolean keepListening;
-	private boolean receiving = false;
 	private XBeeListenerGui mainWindow;
 
 	public XBeeListenerThread(XBeeListenerGui gui) {
