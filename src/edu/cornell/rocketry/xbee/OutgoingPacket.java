@@ -1,5 +1,10 @@
 package edu.cornell.rocketry.xbee;
 
+/**
+ * An instance of OutgoingPacket contains the outgoing packet 
+ * @author Matt
+ *
+ */
 public class OutgoingPacket implements Packet{
 	public static final int DIR_TEST = 0xAB;
 	public static final int DIR_PAYLOAD = 0xAC;
@@ -8,6 +13,10 @@ public class OutgoingPacket implements Packet{
 	private int[] payload;
 	private final int size;
 	
+	/**
+	 * Constructor
+	 * @param t		outgoing packet type
+	 */
 	public OutgoingPacket(OutgoingPacketType t) {
 		type = t;
 		switch (type) {
@@ -23,10 +32,18 @@ public class OutgoingPacket implements Packet{
 		size = payload.length;
 	}
 	
+	/**
+	 * get payload of packet
+	 * @return int[] payload
+	 */
 	public int[] getPayload() {
 		return payload;
 	}
 	
+	/**
+	 * get size of packet
+	 * @return int size
+	 */
 	public int getSize() {
 		return size;
 	}

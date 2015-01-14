@@ -32,9 +32,7 @@ public class XBeeListenerThread extends Thread {
 					
 					mainWindow.updateData(packet.getLatitude(), packet.getLongitude(), packet.getAltitude(), packet.getFlag());
 					
-					mainWindow.incNumRec();
-					mainWindow.addToReceiveText("Received (" + mainWindow.getNumRec() + "): "
-							+ packet.toString());
+					mainWindow.addToGuiLog(packet.toString(), logMsgType.RECEIVED);
 
 				}
 			} 
@@ -42,8 +40,7 @@ public class XBeeListenerThread extends Thread {
 				System.out.println("timeout");
 				// we timed out without a response
 			} catch (XBeeException e) {
-				mainWindow.incNumError();
-				mainWindow.addToReceiveText("Error (" + mainWindow.getNumError() + "): XBee Problem: "+ e.getMessage());
+				mainWindow.addToGuiLog("XBee Problem: "+ e.getMessage(), logMsgType.ERROR);
 				e.printStackTrace();
 			}
 		}

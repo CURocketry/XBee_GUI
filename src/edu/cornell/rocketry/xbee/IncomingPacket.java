@@ -2,6 +2,9 @@ package edu.cornell.rocketry.xbee;
 
 import com.rapplogic.xbee.api.zigbee.ZNetRxResponse;
 
+/**
+ * An instance of IncomingPacket processes the payload of a received packet
+ */
 public class IncomingPacket implements Packet{
 	//lengths in terms of bytes
 	final static public int MARKER_LAT = 0xFB;
@@ -30,6 +33,13 @@ public class IncomingPacket implements Packet{
 	public String getAltitude() { return altitude+""; }
 	public String getFlag() { return flag+"";}
 	
+	/**
+	 * Converts a little endian primitive to big endian
+	 * int[] array contains an array of 1 byte elements
+	 * arduino long == java int
+	 * @param array
+	 * @return
+	 */
 	private int convertToDecimalInt(int[] array){
 		int result = 0;
 		for (int i=array.length-1; i>=0; i--) {
@@ -40,7 +50,10 @@ public class IncomingPacket implements Packet{
 		return result;
 	}
 
-	
+	/**
+	 * constructor for incoming packet
+	 * @param ioSample		packet object
+	 */
 	public IncomingPacket(ZNetRxResponse ioSample) {
 		payload = ioSample.getData();
 		size = payload.length;
@@ -88,10 +101,18 @@ public class IncomingPacket implements Packet{
 		}
 	}
 	
+	/**
+	 * get payload of packet
+	 * @return int[] payload
+	 */
 	public int[] getPayload() {
 		return payload;
 	}
 	
+	/**
+	 * get size of packet
+	 * @return int size
+	 */
 	public int getSize() {
 		return size;
 	}
