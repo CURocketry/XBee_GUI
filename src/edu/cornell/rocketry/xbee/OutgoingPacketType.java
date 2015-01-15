@@ -6,5 +6,5 @@ package edu.cornell.rocketry.xbee;
  * TEST - Packet to test receiving on the remote end
  */
 public enum OutgoingPacketType {
-	TEST, PAYLOAD_LAUNCH
+	TEST, BEGIN_LAUNCH, PAYLOAD_ABORT, PAYLOAD_ABORT_CANCEL
 }

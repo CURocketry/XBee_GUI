@@ -7,7 +7,9 @@ package edu.cornell.rocketry.xbee;
  */
 public class OutgoingPacket implements Packet{
 	public static final int DIR_TEST = 0xAB;
-	public static final int DIR_PAYLOAD = 0xAC;
+	public static final int DIR_BEGIN_LAUNCH = 0xAC;
+	public static final int DIR_PAYLOAD_ABORT = 0xAD;
+	public static final int DIR_PAYLOAD_ABORT_CANCEL = 0xAE;
 	
 	private OutgoingPacketType type;
 	private int[] payload;
@@ -19,14 +21,19 @@ public class OutgoingPacket implements Packet{
 	 */
 	public OutgoingPacket(OutgoingPacketType t) {
 		type = t;
+		payload = new int[1];
 		switch (type) {
 		case TEST:
-			payload = new int[1];
 			payload[0] = DIR_TEST;
 			break;
-		case PAYLOAD_LAUNCH:
-			payload = new int[1];
-			payload[0] = DIR_PAYLOAD;
+		case BEGIN_LAUNCH:
+			payload[0] = DIR_BEGIN_LAUNCH;
+			break;
+		case PAYLOAD_ABORT:
+			payload[0] = DIR_PAYLOAD_ABORT;
+			break;
+		case PAYLOAD_ABORT_CANCEL:
+			payload[0] = DIR_PAYLOAD_ABORT_CANCEL;
 			break;
 		}
 		size = payload.length;
