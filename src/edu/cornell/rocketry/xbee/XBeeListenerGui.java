@@ -47,20 +47,17 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 		  new XBeeAddress64(0, 0x13, 0xa2, 0, 0x40, 0x91, 0x79, 0xa7),
 		  new XBeeAddress64(0, 0x13, 0xa2, 0, 0x40, 0x91, 0x79, 0x6f)
 	};
+	
 	private int selectedBaud = 57600; //serial comm rate
 	private XBeeAddress64 selectedAddress;				//selected address
 	private XBeeListenerThread xbeeListener;
 	public XBee xbee = new XBee(); //keep as public reference @see XBeeListenerThread.java
 	
-	private int numRec = 0; 	//number received packets
-	private int numSent = 0;	//number sent packets
-	private int numErr = 0; 	//number error packets
-
-	private JLabel packetLabel;
-	private JLabel nLabel;
+	private int numRec = 1; 	//number received packets
+	private int numSent = 1;	//number sent packets
+	private int numErr = 1; 	//number error packets
 
 	private JTextArea receiveText;
-	private JTextArea rocketText, payloadText;
 	private JTextField sendEdit;
 	private final static Font titleFont = new Font("Arial", Font.BOLD, 20);
 	private final static Font textAreaFont = new Font("Arial", Font.PLAIN, 10);
@@ -92,7 +89,7 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 		PropertyConfigurator.configure("./lib/log4j.properties");
 
 		// Layout GUI
-		JPanel fullPanel = new JPanel(new BorderLayout());
+		fullPanel = new JPanel(new BorderLayout());
 		setContentPane(fullPanel);
 
 		/*-----------------------------Setup XBees Panel----------------------------*/
@@ -157,15 +154,12 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 			public void actionPerformed(ActionEvent e) {
 				try {
 					initXbee();
-					addToReceiveText("Success! Initialized GS XBee :)");
-					addToReceiveText("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+					addToGuiLog("Success! Initialized GS XBee :)");
+					addToGuiLog("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
 							+ System.getProperty("line.separator"));
 				} catch (XBeeException e1) {
 				e1.printStackTrace();
-					numErr++;
-					addToReceiveText("Error ("
-							+ numErr
-							+ "): Could not connect to XBee :( make sure port isn't being used by another program (including this one)!");
+					addToGuiLog("Could not connect to XBee :( make sure port isn't being used by another program (including this one)!", logMsgType.ERROR);
 				}
 			}
 		});
@@ -314,11 +308,11 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 		try {
 			XBeeSender mailman = new XBeeSender(xbee, selectedAddress, payload);
 			mailman.send();
-			addToReceiveText("Sent (" + numSent + "): " + msg);
+			addToGuiLog(msg, logMsgType.SENT);
 			return true;
 		}
 		catch (XBeeSenderException e) {
-			addToReceiveText("Error (" + numErr + "): " + e.getMessage());
+			addToGuiLog(e.getMessage(), logMsgType.ERROR);
 			incNumError();
 			return false;
 		}
@@ -359,10 +353,36 @@ public class XBeeListenerGui extends javax.swing.JFrame {
 	}
 
 	/**
-	 * Adds text to the Received Packets Box
+	 * adds text to the gui log box
+	 * @param txt			text to add
+	 * @param type			type of log
+	 */
+	public void addToGuiLog(String txt, logMsgType type) {
+		switch (type) {
+		case SENT:
+			addToGuiLog("Sent (" + getNumSent() + "): " + txt);
+			incNumSent();
+			break;
+		case RECEIVED:
+			addToGuiLog("Received (" + getNumRec() + "): " + txt);
+			incNumRec();
+			break;
+		case ERROR:
+			addToGuiLog("Error (" + getNumError() + "): " + txt);
+			incNumError();
+			break;
+		default:
+			addToGuiLog(txt);
+			break;
+		
+		}
+	}
+	
+	/**
+	 * Adds text to the gui log box
 	 * @param txt			text to add
 	 */
-	public void addToReceiveText(String txt) {
+	public void addToGuiLog(String txt) {
 		receiveText.setText(receiveText.getText() + "- " + txt + System.getProperty("line.separator"));
 		receiveText.setCaretPosition(receiveText.getDocument().getLength()); // locks scroll at bottom
 		logMessage(txt);

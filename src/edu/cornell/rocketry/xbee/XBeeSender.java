@@ -7,13 +7,21 @@ import com.rapplogic.xbee.api.XBeeTimeoutException;
 import com.rapplogic.xbee.api.zigbee.ZNetTxRequest;
 import com.rapplogic.xbee.api.zigbee.ZNetTxStatusResponse;
 
-
+/**
+ * An instance of XBeeSender coordinates packet sending
+ */
 public class XBeeSender {
 	
 	private OutgoingPacket payload;
 	private XBeeAddress64 destination;
 	private XBee xbee;
 	
+	/**
+	 * 
+	 * @param x		local XBee instance
+	 * @param a		remote XBee address
+	 * @param p		outgoing packet type
+	 */
 	public XBeeSender(XBee x, XBeeAddress64 a, OutgoingPacket p) {
 		payload = p;
 		destination = a;
@@ -28,11 +36,6 @@ public class XBeeSender {
 		
 		try {
 			// send a request and wait up to 10 seconds for the response
-			//int[] payload = new int[1];
-			//	payload[0] = 0xB;
-			
-			//add condition for Send Data
-			
 			final ZNetTxRequest request = new ZNetTxRequest(destination, payload.getPayload());
 			
 			ZNetTxStatusResponse response = (ZNetTxStatusResponse) xbee.sendSynchronous(request,1000);
